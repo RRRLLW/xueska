@@ -253,3 +253,54 @@ def generate_transcript(first: str, last: str, dob: str, school: str, major: str
     return buf.getvalue()
 
 # (注：generate_teacher_badge 篇幅原因暂未放出，您可以先保留上一次代码中的该函数，主要关注学生证和成绩单的变化)
+def generate_teacher_badge(first: str, last: str, school: str, department: str = "Science", theme: str = "green", photo_bytes: bytes = None, export_pdf: bool = False, custom_id: str = "", valid_date: str = "") -> bytes:
+    # 教师证通常采用横版设计
+    w, h = 500, 350
+    img = Image.new("RGB", (w, h), (250, 250, 250))
+    draw = ImageDraw.Draw(img)
+    
+    colors = COLOR_SCHEMES.get(theme, COLOR_SCHEMES["green"])
+    font_title = get_font(22, True)
+    font_text = get_font(16)
+    font_small = get_font(12)
+    
+    # 顶部 Header
+    draw.rectangle([(0, 0), (w, 50)], fill=colors["primary"])
+    draw.text((w // 2, 25), "FACULTY ID CARD", fill=colors["accent"], font=font_title, anchor="mm")
+    draw.text((w // 2, 75), school[:45], fill=colors["primary"], font=font_text, anchor="mm")
+    
+    # 照片区域
+    photo_x, photo_y, photo_w, photo_h = 25, 100, 100, 120
+    user_img = process_photo(photo_bytes, photo_w, photo_h)
+    if user_img:
+        img.paste(user_img, (photo_x, photo_y))
+    else:
+        draw.rectangle([(photo_x, photo_y), (photo_x + photo_w, photo_y + photo_h)], outline=(200, 200, 200), width=2)
+        draw.text((photo_x + photo_w // 2, photo_y + photo_h // 2), "PHOTO", fill=(150, 150, 150), font=font_text, anchor="mm")
+    
+    # 教师信息区
+    teacher_id = custom_id if custom_id else f"T{random.randint(10000, 99999)}"
+    valid_str = valid_date if valid_date else f"Active"
+    
+    info_x, info_y = photo_x + photo_w + 20, 100
+    info_lines = [
+        f"Name: {first} {last}", 
+        f"ID: {teacher_id}", 
+        f"Dept: {department or 'Education'}", 
+        f"Status: {valid_str}"
+    ]
+    for line in info_lines:
+        draw.text((info_x, info_y), line, fill=colors["text"], font=font_text)
+        info_y += 25
+        
+    # 右下角二维码
+    draw_real_qrcode(img, f"FACULTY|{teacher_id}|{last}", w - 85, h - 130, size=65)
+    
+    # 底部 Footer
+    draw.rectangle([(0, h - 35), (w, h)], fill=colors["primary"])
+    draw.text((w // 2, h - 17), "Property of School District", fill=colors["accent"], font=font_small, anchor="mm")
+    
+    img = add_simple_noise(img, intensity=3)
+    buf = BytesIO()
+    img.save(buf, format="PDF" if export_pdf else "PNG", resolution=100.0)
+    return buf.getvalue()
