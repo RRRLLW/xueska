@@ -32,3 +32,5 @@ playwright
 # ============================================================
 colorama  # Colored terminal output
 numpy     # Better random delays (gamma distribution)
+fastapi
+uvicorn
