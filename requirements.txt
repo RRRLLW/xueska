@@ -34,3 +34,9 @@ colorama  # Colored terminal output
 numpy     # Better random delays (gamma distribution)
 fastapi
 uvicorn
+fastapi
+uvicorn
+Pillow
+python-multipart
+qrcode
+python-barcode
